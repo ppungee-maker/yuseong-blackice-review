@@ -1,0 +1,57 @@
+{
+ "sample": true,
+ "source": "기상청 대전 관측소(133) 실제 관측값 — 과거 사례(시안)",
+ "issued": "",
+ "target": "2026. 2. 13.(금) 밤 ~ 2. 14.(토) 아침",
+ "tmin": 0.5,
+ "wet": false,
+ "rhDawn": 87,
+ "actual": true,
+ "samples": [
+  {
+   "label": "비 온 뒤 영하",
+   "target": "2026. 2. 7.(토) 밤 ~ 2. 8.(일) 아침",
+   "tmin": -10.5,
+   "wet": true,
+   "rhDawn": 66,
+   "actual": true,
+   "level": 5
+  },
+  {
+   "label": "습한 새벽 0℃ 안팎",
+   "target": "2026. 2. 13.(금) 밤 ~ 2. 14.(토) 아침",
+   "tmin": 0.5,
+   "wet": false,
+   "rhDawn": 87,
+   "actual": true,
+   "level": 4
+  },
+  {
+   "label": "습한 새벽 영하",
+   "target": "2026. 1. 15.(목) 밤 ~ 1. 16.(금) 아침",
+   "tmin": -1.2,
+   "wet": false,
+   "rhDawn": 94,
+   "actual": true,
+   "level": 3
+  },
+  {
+   "label": "춥고 건조",
+   "target": "2026. 2. 6.(금) 밤 ~ 2. 7.(토) 아침",
+   "tmin": -8.5,
+   "wet": false,
+   "rhDawn": 49,
+   "actual": false,
+   "level": 2
+  },
+  {
+   "label": "포근한 날",
+   "target": "2026. 3. 14.(토) 밤 ~ 3. 15.(일) 아침",
+   "tmin": 5.0,
+   "wet": false,
+   "rhDawn": 55,
+   "actual": false,
+   "level": 1
+  }
+ ]
+}

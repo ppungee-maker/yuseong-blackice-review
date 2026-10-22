@@ -1,0 +1,201 @@
+/* 유성구 블랙아이스 결빙 주의 지도 — 구 폭염 통합지도와 같은 화면 구성·톤 */
+*{box-sizing:border-box}
+:root{
+  --nav:#193b4c;--bg:#f4f5f3;--card:#fff;--ink:#172630;--mid:#5f6f79;--line:#e2e4e0;
+  --accent:#1f6fd1;--ice:#dcecfb;--warn:#d63b5b;--shadow:0 12px 32px rgba(25,44,55,.12)
+}
+html,body{margin:0;height:100%;font-family:Pretendard,"Noto Sans KR","Malgun Gothic",Arial,sans-serif;color:var(--ink);background:var(--bg)}
+body{overflow:hidden}
+h2{margin:0 0 6px}
+nav{height:64px;background:rgba(21,53,68,.97);display:flex;align-items:center;padding:0 18px;color:#fff;gap:5px;position:relative;z-index:2000;overflow-x:auto}
+.brand{font-weight:800;font-size:17px;margin-right:18px;white-space:nowrap}
+.brand small{font-size:10px;opacity:.55;letter-spacing:1.4px;margin-left:6px}
+.tab{flex:none;border:0;background:transparent;color:#aac0c9;padding:9px 13px;border-radius:999px;cursor:pointer;font-weight:650;font-family:inherit;font-size:14px;white-space:nowrap}
+.tab:hover{background:rgba(255,255,255,.08);color:#fff}
+.tab.on{background:#fff;color:var(--nav)}
+main{height:calc(100% - 64px)}
+.view{display:none;height:100%;overflow:auto}
+.view.on{display:block}
+.view.mapview{position:relative}
+.view.mapview.on{display:flex;overflow:hidden}
+.wrap{max-width:1240px;margin:auto;padding:32px 28px 56px}
+
+.hero{background:linear-gradient(135deg,#193b4c,#2b6f9c);color:#fff;padding:38px;border-radius:24px;margin-bottom:22px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;width:260px;height:260px;border:45px solid rgba(255,255,255,.08);border-radius:50%;right:-80px;top:-95px}
+.hero h1{font-size:36px;margin:8px 0 10px;letter-spacing:-.03em}
+.hero p{max-width:780px;color:#d8e6ee;line-height:1.65}
+.stage-badge{display:inline-block;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.16);font-size:11.5px;font-weight:700}
+.stage-badge:empty{display:none}
+
+.btn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 15px;cursor:pointer;font-weight:650;font-family:inherit;color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:focus-visible,.tab:focus-visible,select:focus-visible,input:focus-visible,.framework .card:focus-visible{outline:3px solid #8fc0f0;outline-offset:2px}
+
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:18px 0}
+.kpi,.card{background:var(--card);border:1px solid var(--line);border-radius:17px;box-shadow:0 1px 3px rgba(20,30,40,.04)}
+.kpi{padding:17px}
+.kpi b{font-size:27px;color:var(--nav);display:block}
+.kpi b small{font-size:13px;margin-left:2px}
+.kpi span{font-size:12px;color:var(--mid)}
+.section-title{font-size:23px;margin:30px 0 5px}
+.sub{color:var(--mid);margin-bottom:18px}
+.framework{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.framework .card{padding:17px;cursor:pointer;transition:.18s;position:relative}
+.framework .card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:#9cc2e8}
+.framework .card.pending{cursor:default;opacity:.72}
+.framework .card.pending:hover{transform:none;box-shadow:none;border-color:var(--line)}
+.framework .icon{font-size:22px}
+.framework h3{font-size:15px;margin:8px 0 5px}
+.framework p{font-size:12.5px;color:var(--mid);min-height:38px;line-height:1.55}
+.framework .stat{font-size:13px;font-weight:750;color:var(--nav)}
+.framework .soon{position:absolute;top:14px;right:14px;font-size:10.5px;background:#eef0ec;color:var(--mid);padding:3px 8px;border-radius:999px}
+.swatch-line{display:inline-block;width:22px;height:5px;border-radius:3px;vertical-align:middle;margin-right:6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:17px}
+.card.pad{padding:20px}
+.card h3{margin:0 0 8px;font-size:16px}
+.chart{min-height:200px}
+.big-number{font-size:34px;font-weight:800;color:var(--nav);margin:6px 0}
+.note{font-size:12px;color:var(--mid);line-height:1.6}
+.sources{margin-top:22px}
+.panel-title{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.panel-title h3{margin:0}
+.panel-title span{font-size:11px;color:var(--mid)}
+
+/* 지도 화면 */
+.map-sidebar{width:290px;background:#fafbf9;border-right:1px solid var(--line);flex:none;display:flex;flex-direction:column;overflow:hidden}
+.map-sidebar:not(.open){display:none}
+.sidebar-content{flex:1;min-height:0;overflow:auto;padding:15px}
+.sidebar-footer{flex:none;padding:10px 15px;border-top:1px solid var(--line)}
+.sidebar-close{display:flex;margin-left:auto;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--nav);font:650 12px/1.4 inherit;cursor:pointer}
+.map-sidebar h3{font-size:11px;color:var(--accent);letter-spacing:.06em;margin:16px 0 7px}
+.map-sidebar h3:first-child{margin-top:2px}
+.map-sidebar select,.map-sidebar input{width:100%;padding:9px;border:1px solid var(--line);border-radius:10px;background:#fff;font-family:inherit}
+.map-sidebar input[type=checkbox]{width:auto;flex:none;margin:0}
+.search-row{display:flex;gap:6px}
+.search-row .btn{flex:none;padding:8px 12px}
+.layer-checks{display:grid;gap:6px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px}
+.layer-checks label{font-size:12.5px;display:flex;align-items:center;gap:7px;cursor:pointer}
+.layer-checks small{color:var(--mid);margin-left:auto;font-size:10.5px}
+.top-list{display:grid;gap:3px;max-height:280px;overflow:auto}
+.top-item{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:7px;align-items:center;width:100%;padding:7px;border:0;border-radius:9px;background:#fff;text-align:left;cursor:pointer;font:inherit}
+.top-item:hover{background:#eaf2fb}
+.top-item .rank{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:7px;background:var(--nav);color:#fff;font-size:10px;font-weight:800}
+.top-item b,.top-item small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top-item b{font-size:11.5px}
+.top-item small{font-size:10px;color:var(--mid)}
+.top-item strong{font-size:11px;color:var(--accent)}
+.warn-note{margin-top:16px;padding:10px;border-radius:10px;background:#fff6e8;color:#7a5520}
+.mapbox{flex:1;position:relative;min-width:0}
+.leafmap{height:100%;width:100%}
+.leaflet-container{background:#eef2f3;font-family:inherit}
+.soft-tiles{filter:saturate(.55) brightness(1.06) contrast(.92)}
+.legend-box,.map-status{position:absolute;z-index:900;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:12px;padding:10px 12px;box-shadow:var(--shadow);font-size:11.5px}
+.legend-box{bottom:18px;left:18px}
+.legend-box b{display:block;margin-bottom:5px;font-size:12px}
+.legend-row{display:flex;align-items:center;gap:7px;margin:4px 0}
+.map-status{top:14px;right:14px;max-width:320px}
+.map-status:empty{display:none}
+.detail-panel{position:absolute;z-index:950;right:14px;top:14px;width:320px;max-height:calc(100% - 28px);overflow:auto;background:#fff;border:1px solid var(--line);border-radius:16px;padding:17px;box-shadow:var(--shadow);display:none}
+.detail-panel.on{display:block}
+.detail-panel h3{margin:0 40px 4px 0;font-size:18px}
+.detail-close{position:absolute;right:10px;top:10px;width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:#fff;color:var(--nav);font:700 21px/1 Arial,sans-serif;cursor:pointer}
+.detail-tag{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;color:#fff;margin:4px 4px 8px 0}
+.metricrow{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #eef0ec;font-size:12.5px}
+.metricrow span{color:var(--mid)}
+.reason-list{margin:10px 0 4px;padding-left:18px;font-size:12.5px;line-height:1.6}
+.detail-actions{display:flex;gap:7px;margin-top:12px}
+.detail-actions .btn{flex:1;text-align:center;text-decoration:none;font-size:12.5px}
+.mobile-filter{position:absolute;z-index:1000;bottom:12px;left:12px;box-shadow:var(--shadow)}
+.mobile-filter[hidden]{display:none}
+.mobile-filter:not([hidden])~.mapbox .legend-box{bottom:68px}
+
+/* 표·차트 */
+.table-wrap{overflow:auto}
+.datatable{width:100%;border-collapse:collapse;font-size:12.5px}
+.datatable th,.datatable td{padding:10px;border-bottom:1px solid #eceee9;text-align:right;white-space:nowrap}
+.datatable th:first-child,.datatable td:first-child{text-align:left}
+.datatable th{position:sticky;top:0;background:#fff;color:var(--mid);font-weight:650}
+.datatable tbody tr{cursor:pointer}
+.datatable tbody tr:hover td{background:#f3f7fb}
+.datatable tfoot td{font-weight:750;border-top:2px solid #dfe3de}
+.cellbar{display:inline-block;height:7px;border-radius:4px;background:#9cc2e8;vertical-align:middle;margin-left:6px}
+.heatmatrix{border-collapse:separate;border-spacing:2px;font-size:11px;min-width:760px}
+.heatmatrix th{color:var(--mid);font-weight:600;padding:3px}
+.heatmatrix td{width:30px;height:30px;border-radius:5px;text-align:center;font-size:9.5px;color:#123}
+.heat-legend{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:11px;color:var(--mid)}
+.heat-legend i{display:block;width:180px;height:9px;border-radius:5px;background:linear-gradient(90deg,#f3f6f8,#9cc2e8,#1f6fd1,#193b4c)}
+svg text{font-family:inherit}
+.chart-axis{stroke:#c3cacd;stroke-width:1}
+.chart-grid{stroke:#eceee9;stroke-width:1}
+.chart-label{font-size:10.5px;fill:#6a7880}
+
+/* 주민 안내 */
+.guide-wrap{max-width:1000px}
+.guide-list{margin:6px 0 0;padding-left:18px;line-height:1.75;font-size:13.5px}
+.notice-card{border-color:#f2c2cc;background:#fff8f9}
+
+/* 로딩 */
+.loading{position:fixed;inset:64px 0 0;background:rgba(244,245,243,.94);z-index:3000;display:flex;align-items:center;justify-content:center}
+.loading[hidden]{display:none!important}
+.loading-card{width:min(440px,calc(100% - 32px));padding:24px;border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:var(--shadow);text-align:center;color:var(--nav)}
+.loading-card strong{display:block;font-size:16px}
+.loading-card p{margin:8px 0 16px;color:var(--mid);font-size:12px}
+.loading.is-error .loading-card strong{color:#a3422f}
+
+@media(max-width:1000px){.framework{grid-template-columns:repeat(2,1fr)}.kpis{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){
+  .brand{display:none}
+  .tab{font-size:12.5px;padding:8px 10px}
+  .wrap{padding:18px 14px 40px}
+  .hero{padding:24px}.hero h1{font-size:26px}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .framework,.grid2{grid-template-columns:1fr}
+  .map-sidebar{position:absolute;z-index:1100;height:100%;max-width:calc(100vw - 24px);box-shadow:var(--shadow)}
+  .detail-panel{left:10px;right:10px;top:auto;bottom:10px;width:auto;max-height:62%}
+  .legend-box{font-size:10.5px;padding:8px 10px}
+}
+
+/* 단계 기준 설명 (지도 메뉴) */
+.grade-info{margin-top:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.grade-info summary{font-size:12.5px;font-weight:700;cursor:pointer;color:var(--accent)}
+.grade-info .note{margin:6px 0}
+.gi-row{display:grid;grid-template-columns:24px 1fr;gap:6px;align-items:start;padding:5px 0;border-top:1px solid var(--line)}
+.gi-row .swatch-line{margin-top:7px}
+.gi-row b{font-size:12px}.gi-row small{font-size:10.5px;color:var(--mid)}
+.gi-row p{margin:2px 0 0;font-size:11.5px;line-height:1.5;color:#33454f}
+.gi-pts{margin-top:6px;font-size:11.5px;line-height:1.5}
+.gi-pts>b{display:block;font-size:11.5px;padding:4px 0}
+.gi-pts>div{padding:3px 0;border-top:1px solid var(--line)}
+.gi-pts span{color:var(--accent);font-weight:700;white-space:nowrap}
+
+/* 오늘 밤 결빙 지수 카드 */
+.today-card{--ic:#5d9bd1;display:flex;gap:14px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-left:6px solid var(--ic);border-radius:16px;box-shadow:var(--shadow)}
+.today-card[hidden]{display:none}
+.today-card .ic-face{font-size:46px;line-height:1}
+.today-card .ic-body{min-width:0}
+.today-card .ic-title{font-size:12px;font-weight:700;color:var(--mid)}
+.today-card .ic-level{font-size:20px;font-weight:800;margin:2px 0}
+.today-card .ic-msg{margin:2px 0 4px;font-size:13px;line-height:1.5}
+.today-card .ic-cond{font-size:12px;color:var(--ink);font-weight:650}
+.today-card .ic-basis{font-size:12.5px;margin-top:6px;color:#33454f}
+.today-card .ic-src{font-size:10.5px;color:var(--mid);margin-top:5px;line-height:1.5}
+.today-card .ic-sample{display:inline-block;margin-left:4px;padding:1px 7px;border-radius:999px;background:#fff1c9;color:#8a5a00;font-size:10.5px}
+#todayMap{position:absolute;z-index:900;left:58px;top:12px;width:330px;padding:12px 34px 12px 14px}
+#todayMap .ic-toggle{position:absolute;top:6px;right:8px;border:0;background:none;font-size:18px;color:var(--mid);cursor:pointer}
+#todayMap.mini{width:auto;padding:6px 34px 6px 10px;align-items:center}
+#todayMap.mini .ic-face{font-size:28px}
+#todayMap.mini .ic-msg,#todayMap.mini .ic-cond,#todayMap.mini .ic-src,#todayMap.mini .ic-title{display:none}
+#todayMap.mini .ic-level{font-size:15px}
+#todayMap.mini .ic-toggle{top:50%;transform:translateY(-50%)}
+.today-card.big{margin:18px 0 0;padding:18px 20px;flex-wrap:wrap}
+.today-card.big .ic-face{font-size:64px}
+.today-card.big .ic-level{font-size:26px}
+.today-card.big .ic-body{flex:1}
+.ic-demo{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--mid);border-top:1px dashed var(--line);padding-top:10px}
+.ic-demo .btn{padding:5px 11px;font-size:12px}
+@media(max-width:760px){#todayMap{left:52px;right:12px;width:auto}}
+.today-card .ic-actual{font-size:12px;margin-top:4px;color:#33454f}
+.ic-demo .btn.on{background:var(--nav);color:#fff;border-color:var(--nav)}
+.locate-control a{font-size:19px;line-height:30px;color:var(--accent);font-weight:700}
+.locate-control a.busy{animation:locpulse 1s infinite}
+@keyframes locpulse{50%{opacity:.35}}

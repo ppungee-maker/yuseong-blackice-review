@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>[검토용] 유성구 블랙아이스 결빙 주의 지도</title>
+<meta name="description" content="유성구 도로의 블랙아이스(결빙) 주의 구간과 겨울철 위험 시기를 지도로 안내합니다.">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="css/style.css?v=20261021a">
+</head>
+<body>
+<div id="loading" class="loading" role="status" aria-live="polite">
+  <div class="loading-card">
+    <strong id="loadingTitle">결빙 주의 지도 자료를 불러오는 중입니다.</strong>
+    <p id="loadingDetail">잠시만 기다려 주세요.</p>
+    <button class="btn primary" id="loadingRetry" type="button" hidden>다시 시도</button>
+  </div>
+</div>
+
+<nav aria-label="주요 화면">
+  <div class="brand">유성구 블랙아이스 지도<small>BLACK ICE</small></div>
+  <span title="주민 공개 전 내부 검토용 시안입니다. 내용이 바뀔 수 있습니다." style="background:#f59e0b;color:#1f2937;font-size:12px;font-weight:700;padding:2px 8px;border-radius:10px;margin:0 10px;white-space:nowrap;align-self:center">검토용 시안</span>
+  <button class="tab" type="button" data-view="overview">분석 개요</button>
+  <button class="tab on" type="button" data-view="map" aria-current="page">결빙 주의 지도</button>
+  <button class="tab" type="button" data-view="season">결빙 위험 시기</button>
+  <button class="tab" type="button" data-view="dong">행정동별 현황</button>
+  <button class="tab" type="button" data-view="guide">주민 안내</button>
+</nav>
+
+<main>
+<!-- 분석 개요 -->
+<section class="view" id="v-overview"><div class="wrap">
+  <div class="hero">
+    <span class="stage-badge" id="stageBadge"></span>
+    <h1>겨울철 우리 동네 결빙 주의 구간</h1>
+    <p>블랙아이스는 눈에 잘 보이지 않는 얇은 얼음막입니다. 다리 위, 터널 출입구, 그늘진 길처럼 먼저 얼고 늦게 녹는 곳을 미리 알면 사고를 줄일 수 있습니다. 유성구 전체 도로를 분석해 결빙에 주의해야 할 구간을 지도로 안내합니다.</p>
+    <button class="btn primary" id="openMap" type="button">결빙 주의 지도 보기</button>
+  </div>
+  <div class="today-card big" id="todayOverview" hidden></div>
+  <div class="kpis" id="kpis"></div>
+
+  <h2 class="section-title">결빙에 주의해야 할 곳</h2>
+  <div class="sub">카드를 누르면 지도에서 해당 구간을 보여 줍니다.</div>
+  <div class="framework" id="factorCards"></div>
+
+  <h2 class="section-title">언제 위험한가</h2>
+  <div class="grid2">
+    <div class="card pad">
+      <h3>위험한 시간대</h3>
+      <p class="note" id="hourNote"></p>
+      <div id="hourChartSmall" class="chart"></div>
+    </div>
+    <div class="card pad">
+      <h3>기온만 보면 놓치는 위험</h3>
+      <p class="big-number" id="airGroundNumber"></p>
+      <p class="note">기온은 영상인데 땅 표면은 영하였던 시간입니다. 블랙아이스는 기온이 아니라 노면 온도에 따라 생기므로, 기온 예보만 보고 안심하면 안 됩니다.</p>
+      <button class="btn" type="button" data-goto="season">결빙 위험 시기 자세히 보기</button>
+    </div>
+  </div>
+  <p class="note sources" id="sourcesOverview"></p>
+</div></section>
+
+<!-- 결빙 주의 지도 -->
+<section class="view mapview on" id="v-map">
+  <button class="btn mobile-filter" id="mobileFilter" type="button" aria-controls="mapSidebar" aria-expanded="false" hidden>☰ 메뉴 열기</button>
+  <aside class="map-sidebar open" id="mapSidebar">
+    <div class="sidebar-content">
+      <h3>표시 항목</h3>
+      <div class="layer-checks" id="layerChecks"></div>
+      <details class="grade-info" open>
+        <summary>단계는 어떻게 정했나요?</summary>
+        <div id="gradeInfo"></div>
+      </details>
+      <h3>위험 요인으로 보기</h3>
+      <select id="factorSelect" aria-label="위험 요인 선택"></select>
+      <h3>도로명 검색</h3>
+      <div class="search-row">
+        <input id="roadSearch" list="roadNames" placeholder="예: 유성대로" aria-label="도로명 검색">
+        <button class="btn" id="roadSearchBtn" type="button">찾기</button>
+      </div>
+      <datalist id="roadNames"></datalist>
+      <h3>행정동</h3>
+      <select id="dongSelect" aria-label="행정동 선택"></select>
+      <h3>배경지도</h3>
+      <select id="baseSelect" aria-label="배경지도">
+        <option value="soft">흐린 지도</option>
+        <option value="osm">일반 지도</option>
+      </select>
+      <h3>주의 구간이 긴 도로</h3>
+      <div id="topList" class="top-list" aria-label="4~5단계 구간이 긴 도로 목록"></div>
+      <p class="note warn-note">이 지도는 통계 분석에 따른 참고 정보입니다. 표시되지 않은 도로도 얼 수 있으니 겨울철에는 항상 서행해 주세요.</p>
+    </div>
+    <div class="sidebar-footer"><button class="sidebar-close" type="button">‹ 메뉴 접기</button></div>
+  </aside>
+  <div class="mapbox">
+    <div id="map" class="leafmap" role="region" aria-label="유성구 결빙 주의 지도"></div>
+    <div class="today-card" id="todayMap" hidden></div>
+    <div id="legend" class="legend-box"></div>
+    <div id="mapStatus" class="map-status" aria-live="polite"></div>
+    <div id="detail" class="detail-panel" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- 결빙 위험 시기 -->
+<section class="view" id="v-season"><div class="wrap">
+  <h2>결빙 위험 시기</h2>
+  <div class="sub" id="seasonSub"></div>
+  <div class="kpis" id="seasonKpis"></div>
+  <div class="card pad">
+    <div class="panel-title"><h3>월·시간대별 결빙 위험 달력</h3><span>칸이 진할수록 그 시간에 결빙 조건이 자주 나타났습니다</span></div>
+    <div id="heatmap" class="table-wrap"></div>
+  </div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="card pad">
+      <div class="panel-title"><h3>하루 중 기온과 땅 표면 온도</h3><span>겨울철 시간대별 평균</span></div>
+      <div id="tempChart" class="chart"></div>
+    </div>
+    <div class="card pad">
+      <div class="panel-title"><h3>겨울별 결빙 위험일</h3><span>11.15.~3.15. 중 결빙 조건이 있었던 날</span></div>
+      <div id="seasonChart" class="chart"></div>
+    </div>
+  </div>
+  <div class="card pad" style="margin-top:16px">
+    <h3>어떻게 판단했나요?</h3>
+    <p class="note">기상청 대전 관측소의 시간별 관측값으로 매시간 결빙 조건을 판단했습니다. <b>땅 표면 온도가 0℃ 이하</b>이면서 ① 공기 중 수분이 서리로 맺힐 수 있거나(이슬점 온도 ≥ 땅 표면 온도) ② 최근 12시간 안에 비나 눈이 온 경우를 ‘결빙 조건’으로 보았습니다. 관측소 한 곳의 값이므로 실제 도로는 그늘·교량 여부에 따라 더 춥거나 따뜻할 수 있습니다.</p>
+  </div>
+</div></section>
+
+<!-- 행정동별 현황 -->
+<section class="view" id="v-dong"><div class="wrap">
+  <h2>행정동별 현황</h2>
+  <div class="sub">행정동별 도로 연장과 결빙 주의 구간입니다. 행을 누르면 지도에서 해당 동을 보여 줍니다.</div>
+  <div class="card table-wrap"><table id="dongTable" class="datatable"></table></div>
+</div></section>
+
+<!-- 주민 안내 -->
+<section class="view" id="v-guide"><div class="wrap guide-wrap">
+  <h2>주민 안내</h2>
+  <div class="grid2">
+    <div class="card pad">
+      <h3>❄️ 블랙아이스란?</h3>
+      <p>도로 위에 얇고 투명하게 언 얼음막입니다. 아스팔트 색이 그대로 비쳐 보여 젖은 길처럼 보이지만, 일반 도로보다 훨씬 미끄럽습니다.</p>
+    </div>
+    <div class="card pad">
+      <h3>📍 특히 조심할 곳</h3>
+      <ul class="guide-list">
+        <li><b>다리(교량)·고가도로 위</b> — 위아래로 찬 공기를 받아 가장 먼저 업니다.</li>
+        <li><b>터널 출입구</b> — 안팎 온도 차로 출입구 부근이 얼기 쉽습니다.</li>
+        <li><b>산·건물 그늘 구간</b> — 낮에도 햇볕이 들지 않아 잘 녹지 않습니다.</li>
+        <li><b>하천·저수지 옆 도로</b> — 습기가 많아 서리가 잘 낍니다.</li>
+      </ul>
+    </div>
+    <div class="card pad">
+      <h3>⏰ 조심할 때</h3>
+      <ul class="guide-list">
+        <li><b>새벽 2시 ~ 오전 8시</b> — 땅 표면이 가장 차갑습니다.</li>
+        <li><b>비나 눈이 온 다음 날 새벽</b> — 젖은 노면이 다시 얼어붙습니다.</li>
+        <li><b>맑고 바람 없는 겨울밤</b> — 기온이 영상이어도 노면은 영하일 수 있습니다.</li>
+      </ul>
+    </div>
+    <div class="card pad">
+      <h3>🚗 안전운전 요령</h3>
+      <ul class="guide-list">
+        <li>평소보다 <b>속도를 절반 가까이</b> 줄이고 차간거리를 2배 이상 둡니다.</li>
+        <li>미끄러질 때는 <b>급제동·급핸들을 피하고</b> 엔진브레이크로 천천히 속도를 줄입니다.</li>
+        <li>다리 위·그늘 구간에서는 <b>차로 변경을 삼갑니다.</b></li>
+        <li>출발 전 날씨와 노면 상황을 확인합니다.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card pad notice-card" style="margin-top:16px">
+    <h3>📞 결빙 신고·문의</h3>
+    <p id="contactText">신고·문의처는 확정 후 안내합니다.</p>
+  </div>
+  <div class="card pad" style="margin-top:16px">
+    <h3>이용 시 유의사항</h3>
+    <ul class="guide-list note">
+      <li>이 지도는 공공 공간정보와 기상 관측 자료를 통계적으로 분석한 <b>참고 정보</b>이며, 실제 노면 상태를 실시간으로 알려 주지 않습니다.</li>
+      <li><b>지도에 표시되지 않은 도로도 얼 수 있습니다.</b> 겨울철에는 모든 도로에서 서행해 주세요.</li>
+      <li>교통사고 개별 위치 등 개인 관련 정보는 공개하지 않습니다.</li>
+      <li>지도의 ‘내 위치’(◎) 버튼은 휴대전화 위치로 지도만 옮기며, 위치 정보는 어디에도 저장하거나 보내지 않습니다.</li>
+    </ul>
+    <p class="note sources" id="sourcesGuide"></p>
+  </div>
+</div></section>
+
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/config.js?v=20261021a"></script>
+<script src="js/charts.js?v=20261021a"></script>
+<script src="js/map.js?v=20261021a"></script>
+<script src="js/icecast.js?v=20261021a"></script>
+<script src="js/app.js?v=20261021a"></script>
+</body>
+</html>
