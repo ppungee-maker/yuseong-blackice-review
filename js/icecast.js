@@ -3,7 +3,7 @@
 // 지금은 시안: 대전 관측소의 과거 실제 밤(단계별 1개)을 samples로 넣어 둠 (scripts/analysis/build_ice_index.py 참고).
 window.IceCast = (() => {
   const esc = (s) => window.Charts.esc(s ?? "");
-  const COLORS = { 5: "#b2182b", 4: "#ef6548", 3: "#f2a93b", 2: "#5d9bd1", 1: "#2e9d5b" };
+  const COLORS = { 5: "#ff2d55", 4: "#ff7a45", 3: "#f5b942", 2: "#5aaae6", 1: "#3ecf8e" };
   function judge(idx, w) {
     const t = idx.tminBins.filter((b) => w.tmin >= b).length;
     const hum = w.rhDawn >= idx.humid;

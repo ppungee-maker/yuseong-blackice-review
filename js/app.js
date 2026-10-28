@@ -22,6 +22,9 @@
       if (!r.ok) throw new Error(`${url} 응답 오류 (${r.status})`);
       data[k] = await r.json();
     }));
+    await Promise.all(Object.entries(C.optionalFiles || {}).map(async ([k, url]) => {
+      try { const r = await fetch(url); if (r.ok) data[k] = await r.json(); } catch (e) { /* 선택 자료 */ }
+    }));
   } catch (e) {
     console.error(e);
     showError(e.message);
@@ -29,26 +32,34 @@
   }
   const S = data.summary, W = S.weather;
 
-  // ---------- 화면 전환
+  // ---------- 화면 전환: 지도는 늘 깔려 있고, 나머지는 지도 옆 설명 패널로 연다
   const tabs = [...document.querySelectorAll(".tab")];
+  const sheet = document.getElementById("sheet");
   function go(view) {
     tabs.forEach((t) => {
       const on = t.dataset.view === view;
       t.classList.toggle("on", on);
       on ? t.setAttribute("aria-current", "page") : t.removeAttribute("aria-current");
     });
-    document.querySelectorAll(".view").forEach((v) => v.classList.toggle("on", v.id === `v-${view}`));
-    if (view === "map") setTimeout(() => window.IceMap.invalidate(), 0);
+    const page = document.getElementById(`v-${view}`);
+    document.querySelectorAll(".view").forEach((v) => v.classList.toggle("on", v === page));
+    sheet.hidden = !page;
+    if (page) {
+      document.getElementById("sheetTitle").textContent = page.dataset.title;
+      sheet.querySelector(".sheet-body").scrollTop = 0;
+    }
+    setTimeout(() => window.IceMap.invalidate(), 0);
     history.replaceState(null, "", `#${view}`);
   }
   tabs.forEach((t) => (t.onclick = () => go(t.dataset.view)));
   document.querySelectorAll("[data-goto]").forEach((b) => (b.onclick = () => go(b.dataset.goto)));
   document.getElementById("openMap").onclick = () => go("map");
 
-  // ---------- 지도 메뉴 접기 (휴대폰은 접힌 상태로 시작)
+  // ---------- 지도 도구 접기 (휴대폰은 접힌 상태로 시작)
   const sidebar = document.getElementById("mapSidebar"), opener = document.getElementById("mobileFilter");
   function setSidebar(open) {
     sidebar.classList.toggle("open", open);
+    sidebar.closest(".stage").classList.toggle("tools-closed", !open);
     opener.hidden = open;
     opener.setAttribute("aria-expanded", String(open));
     setTimeout(() => window.IceMap.invalidate(), 0);
@@ -62,10 +73,10 @@
   const kpi = (v, unit, label) => `<div class="kpi"><b>${v}<small>${unit}</small></b><span>${label}</span></div>`;
   const gkm = (g) => S.grades.find((x) => x.grade === g).km;
   document.getElementById("kpis").innerHTML =
-    kpi(Math.round(S.roads.km).toLocaleString(), "km", "분석한 유성구 도로 연장") +
+    kpi(Math.round(S.roads.km).toLocaleString(), "km", `분석한 구 관리 도로 연장 (전체 ${Math.round(S.scope.allKm).toLocaleString()} km 중)`) +
     kpi(gkm(5), "km", "5단계 매우 주의 구간") +
     kpi(gkm(4), "km", "4단계 주의 구간") +
-    kpi(S.registry.count, "곳", `행정안전부 상습 결빙구간 (${S.registry.km} km)`) +
+    kpi(S.registry.count, "곳", `유성구 지정 상습 결빙구간 (${S.registry.km} km)`) +
     kpi(`${Math.round(1 / riskShare * 10) / 10}`, "일에 1일", `겨울철 결빙 조건 발생 (13년 평균)`);
 
   const fstat = { bridge: `${S.bridge.count}곳 · ${S.factors.bridge} km`, portal: `출입구 ${S.tunnel.portals}곳 · ${S.factors.portal} km` };
@@ -83,10 +94,6 @@
   const below = W.groundByHour.map((v, h) => [v, h]).filter(([v]) => v < 0).map(([, h]) => h);
   document.getElementById("hourNote").textContent =
     `겨울철 평균 땅 표면 온도는 ${below[0]}시~${below.at(-1)}시에 영하로 내려가고, ${W.groundByHour.indexOf(Math.min(...W.groundByHour))}시에 가장 낮습니다.`;
-  Charts.line(document.getElementById("hourChartSmall"), [
-    { name: "땅 표면", color: "#1f6fd1", values: W.groundByHour },
-    { name: "기온", color: "#9aa6ab", values: W.airByHour, dash: true }
-  ], { xLabels: hours, yLabel: "℃", height: 210 });
   document.getElementById("airGroundNumber").textContent = `${W.airAboveGroundBelow.toLocaleString()}시간`;
   const src = `자료: ${S.sources.join(" · ")}`;
   document.getElementById("sourcesOverview").textContent = src;
@@ -101,12 +108,42 @@
     kpi(W.riskHours.toLocaleString(), "시간", `결빙 조건 시간 (서리 ${W.frostHours.toLocaleString()} · 비·눈 뒤 ${W.refreezeHours.toLocaleString()})`) +
     kpi(W.airAboveGroundBelow.toLocaleString(), "시간", "기온 영상·땅 표면 영하") +
     kpi(W.minGround, "℃", `가장 낮았던 땅 표면 온도 (기온 ${W.minAir}℃)`);
-  Charts.heatmap(document.getElementById("heatmap"), W.monthHour.months, W.monthHour.rate);
-  Charts.line(document.getElementById("tempChart"), [
-    { name: "땅 표면", color: "#1f6fd1", values: W.groundByHour },
-    { name: "기온", color: "#9aa6ab", values: W.airByHour, dash: true }
-  ], { xLabels: hours, yLabel: "℃" });
-  Charts.bars(document.getElementById("seasonChart"), W.seasons.map((s) => s.season), W.seasons.map((s) => s.riskDays), { unit: "일" });
+  // 차트는 밤·낮 테마에 맞는 색으로 그리고, 테마를 바꾸면 다시 그림
+  function drawCharts() {
+    const light = Charts.light();
+    const temps = [
+      { name: "땅 표면", color: light ? "#1f6fd1" : "#7cc8ff", values: W.groundByHour },
+      { name: "기온", color: light ? "#9aa6ab" : "#8a97a1", values: W.airByHour, dash: true }
+    ];
+    Charts.line(document.getElementById("hourChartSmall"), temps, { xLabels: hours, yLabel: "℃", height: 210 });
+    Charts.heatmap(document.getElementById("heatmap"), W.monthHour.months, W.monthHour.rate);
+    Charts.line(document.getElementById("tempChart"), temps, { xLabels: hours, yLabel: "℃" });
+    Charts.bars(document.getElementById("seasonChart"), W.seasons.map((s) => s.season), W.seasons.map((s) => s.riskDays),
+      { unit: "일", color: light ? "#1f6fd1" : "#5aaae6" });
+  }
+  drawCharts();
+
+  // ---------- 밤·낮 테마 (처음 값은 index.html 머리에서 정함)
+  const themeBtns = document.querySelectorAll("[data-theme-toggle]");
+  function setTheme(t, save) {
+    document.documentElement.dataset.theme = t;
+    if (save) { try { localStorage.setItem("theme", t); } catch (e) { /* 저장 못 해도 이번 화면은 바뀜 */ } }
+    themeBtns.forEach((b) => {
+      b.textContent = t === "light" ? "🌙" : "☀️";
+      b.title = t === "light" ? "밤 화면으로 바꾸기" : "낮 화면으로 바꾸기";
+      b.setAttribute("aria-label", b.title);
+    });
+    document.querySelector('meta[name="theme-color"]').content = t === "light" ? "#ffffff" : "#0b141d";
+    drawCharts();
+    window.IceMap.setTheme();
+  }
+  // 직접 고르지 않았으면 휴대폰·PC의 다크 모드 설정이 바뀔 때 따라감
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+    let saved = null;
+    try { saved = localStorage.getItem("theme"); } catch (err) { /* 무시 */ }
+    if (!saved) setTheme(e.matches ? "dark" : "light", false);
+  });
+  themeBtns.forEach((b) => (b.onclick = () => setTheme(document.documentElement.dataset.theme === "light" ? "dark" : "light", true)));
 
   // ---------- 행정동별 현황
   const rows = [...S.dongs].sort((a, b) => b.g5Km + b.g4Km - (a.g5Km + a.g4Km));
@@ -125,9 +162,11 @@
 
   // ---------- 지도 시작
   window.IceMap.init(data);
+  setTheme(document.documentElement.dataset.theme, false);
   window.IceCast.init();
   if (window.matchMedia("(max-width:760px)").matches) { setSidebar(false); window.IceMap.fitGu(); }
-  const start = (location.hash || "#map").slice(1);
-  go(document.getElementById(`v-${start}`) ? start : "map");
+  const mobile = window.matchMedia("(max-width:760px)").matches;
+  const start = (location.hash || (mobile ? "#map" : "#overview")).slice(1);
+  go(start === "map" || document.getElementById(`v-${start}`) ? start : "map");
   loading.root.hidden = true;
 })();

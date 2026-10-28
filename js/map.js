@@ -7,12 +7,13 @@ window.IceMap = (() => {
   const visible = {};
   let searchIndex = new Map();   // 도로명 → [layers]
 
-  const roadKey = (p) => `g${p.gr}`;
+  const roadKey = (p) => (p.c ? "city" : `g${p.gr}`);   // c: 0 구 관리, 1 대전시, 2 고속도로
   let factorBit = 0;   // 0 = 모든 요인, 그 외 = 해당 요인이 있는 구간만 진하게
 
   function styleFor(key, p) {
     const cfg = C.layers[key];
     let st;
+    if (key === "city") return { color: cfg.color, weight: cfg.weight * (p.g <= 2 ? 1.5 : 1), opacity: 0.9 };
     if (key === "g1" || key === "g2") {
       const w = ({ 1: 2.2, 2: 1.8, 3: 1.3, 4: 0.8 }[p.g] || 0.8) * (key === "g2" ? 1.2 : 1);
       st = { color: cfg.color, weight: w, opacity: p.g <= 2 ? 0.8 : 0.6 };
@@ -61,6 +62,22 @@ window.IceMap = (() => {
       ${roadviewButtons(latlng)}`);
   }
 
+  function cityDetail(p, latlng) {
+    showDetail(`<h3>${esc(p.n)}</h3><span class="detail-tag" style="background:#5d6a74">${esc(C.managerNames[p.c])} 관리 도로</span>
+      <div class="metricrow"><span>행정동</span><b>${esc(p.d || "-")}</b></div>
+      <div class="metricrow"><span>도로 구분</span><b>${esc(C.gradeNames[p.g])}</b></div>
+      <p class="note">${esc(C.managerNames[p.c])}이(가) 관리하는 도로라 이 지도의 결빙 주의 단계에서 뺐습니다. 다리 위·그늘진 곳은 마찬가지로 얼 수 있으니 겨울철 새벽에는 서행해 주세요.</p>
+      ${roadviewButtons(latlng)}`);
+  }
+
+  function snowDetail(p, latlng) {
+    showDetail(`<h3>${esc(p.id)} 노선</h3><span class="detail-tag" style="background:${C.layers.snow.color}">구 제설 노선 (2026~2027)</span>
+      ${p.a ? `<div class="metricrow"><span>지역</span><b>${esc(p.a)}</b></div>` : ""}
+      <div class="metricrow"><span>장비</span><b>${esc(p.t)}</b></div>
+      <p class="note">건설과 제설 노선도(PDF)에서 선을 따 온 것이라 실제 도로와 수 m 어긋날 수 있습니다.</p>
+      ${roadviewButtons(latlng)}`);
+  }
+
   function registryDetail(p, latlng) {
     showDetail(`<h3>${esc(p.n)}</h3><span class="detail-tag" style="background:${C.layers.registry.color}">행정안전부 상습 결빙구간</span>
       <div class="metricrow"><span>관리기관</span><b>${esc(p.org)}</b></div>
@@ -84,22 +101,24 @@ window.IceMap = (() => {
       + (factorBit ? `<div class="legend-row">진한 선 = ${esc(C.factors.find((f) => f.bit === factorBit).name)} 요인 구간</div>` : "");
   }
 
-  const DRAW_ORDER = ["g1", "g2", "g3", "g4", "g5", "registry"];   // 아래 → 위
+  const DRAW_ORDER = ["snow", "city", "g1", "g2", "g3", "g4", "g5", "registry"];   // 아래 → 위
   function setLayer(key, on) {
     visible[key] = on;
     // 캔버스는 추가한 순서대로 그리므로, 켜진 항목을 정해진 순서로 다시 올린다
-    DRAW_ORDER.forEach((k) => map.removeLayer(groups[k]));
+    DRAW_ORDER.forEach((k) => groups[k] && map.removeLayer(groups[k]));
     DRAW_ORDER.forEach((k) => visible[k] && groups[k].addTo(map));
     legend();
   }
 
-  let guBounds;
+  const DONG_STYLE = { color: "#8fb4cf", weight: 1.1, opacity: 0.4, fill: false, dashArray: "4 4" };
+  let guBounds, applyBase = () => {};
   // 유성구 전체가 보이게 맞추고, 그보다 한 단계 넘게 축소하지 못하게 함 (휴대폰에서 메뉴를 접은 뒤 다시 호출)
   function fitGu() {
     map.invalidateSize();
     if (map.getSize().x === 0) return;                    // 숨은 탭에서 시작한 경우
     map.setMinZoom(10);
-    map.fitBounds(guBounds, { padding: [10, 10] });
+    const wide = map.getSize().x > 760;                    // PC는 왼쪽 도구 상자·위 검색창 자리를 비움
+    map.fitBounds(guBounds, wide ? { paddingTopLeft: [310, 70], paddingBottomRight: [20, 20] } : { padding: [10, 10] });
     map.setMinZoom(Math.max(10, map.getZoom() - 1));
   }
 
@@ -128,8 +147,8 @@ window.IceMap = (() => {
       if (!inRing(ll, guRingLL)) { status.textContent = "현재 위치가 유성구 밖입니다. 이 지도는 유성구 도로만 보여 줍니다."; return; }
       const acc = Math.min(pos.coords.accuracy || 0, 1000);
       meLayer = L.layerGroup([
-        L.circle(ll, { radius: acc, color: "#1f6fd1", weight: 1, fillOpacity: 0.08, interactive: false }),
-        L.circleMarker(ll, { radius: 7, color: "#fff", weight: 3, fillColor: "#1f6fd1", fillOpacity: 1, interactive: false })
+        L.circle(ll, { radius: acc, color: "#7cc8ff", weight: 1, fillOpacity: 0.1, interactive: false }),
+        L.circleMarker(ll, { radius: 7, color: "#fff", weight: 3, fillColor: "#3aa0ff", fillOpacity: 1, interactive: false })
       ]).addTo(map);
       map.setView(ll, 16);
       // 반경 안 4~5단계 구간 수 (꼭짓점 하나라도 반경 안이면 셈)
@@ -151,18 +170,29 @@ window.IceMap = (() => {
     map = L.map("map", { preferCanvas: true, zoomControl: true, minZoom: 10, zoomSnap: 0.25, zoomDelta: 0.5 }).setView(C.center, C.zoom);
     // 키 없이 쓸 수 있는 OpenStreetMap 타일. 공개 배포 시 브이월드(국토교통부) 배경지도 키 발급 후 추가 권장
     const osm = (cls) => L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, className: cls, attribution: "&copy; OpenStreetMap contributors" });
-    const tiles = { soft: osm("soft-tiles"), osm: osm("") };
-    base = tiles.soft.addTo(map);
-    document.getElementById("baseSelect").onchange = (e) => { map.removeLayer(base); base = tiles[e.target.value].addTo(map); };
+    const tiles = { night: osm("night-tiles"), soft: osm("soft-tiles"), osm: osm("") };
+    let baseChoice = "auto";                                // auto = 화면 테마(밤·낮)에 맞춤
     const renderer = L.canvas({ tolerance: 6 });
 
     // 분석 범위는 유성구뿐이므로 구 밖은 흐리게 가리고, 구 주변(약 3 km)까지만 움직이게 한다
     map.createPane("mask").style.zIndex = 350;              // 배경지도(200) 위, 도로(400) 아래
     const guRing = data.gu.features[0].geometry.coordinates[0].map(([x, y]) => [y, x]);
     const world = [[-89, -179], [-89, 179], [89, 179], [89, -179]];
-    L.polygon([world, guRing], { pane: "mask", renderer: L.svg({ pane: "mask" }), stroke: false,
-      fillColor: "#5f6b73", fillOpacity: 0.45, interactive: false }).addTo(map);
-    L.polyline(guRing, { pane: "mask", renderer: L.svg({ pane: "mask" }), color: "#193b4c", weight: 3, opacity: 0.85, interactive: false }).addTo(map);
+    const mask = L.polygon([world, guRing], { pane: "mask", renderer: L.svg({ pane: "mask" }), stroke: false, interactive: false }).addTo(map);
+    const edge = L.polyline(guRing, { pane: "mask", renderer: L.svg({ pane: "mask" }), weight: 2.5, interactive: false }).addTo(map);
+    // 밤 지도는 구 밖을 더 어둡게, 낮 지도는 회색으로 가림
+    const paint = (night) => {
+      mask.setStyle(night ? { fillColor: "#03080c", fillOpacity: 0.6 } : { fillColor: "#5f6b73", fillOpacity: 0.45 });
+      edge.setStyle(night ? { color: "#7cc8ff", opacity: 0.7 } : { color: "#193b4c", opacity: 0.85 });
+    };
+    applyBase = () => {
+      const k = baseChoice === "auto" ? (document.documentElement.dataset.theme === "light" ? "soft" : "night") : baseChoice;
+      if (base) map.removeLayer(base);
+      base = tiles[k].addTo(map);
+      paint(k === "night");
+    };
+    applyBase();
+    document.getElementById("baseSelect").onchange = (e) => { baseChoice = e.target.value; applyBase(); };
     guBounds = L.latLngBounds(guRing);
     guRingLL = guRing;
     const Locate = L.Control.extend({
@@ -181,7 +211,7 @@ window.IceMap = (() => {
     map.options.maxBoundsViscosity = 1.0;
 
     // 행정동 경계
-    dongLayer = L.geoJSON(data.dong, { style: { color: "#193b4c", weight: 1.2, opacity: 0.5, fill: false, dashArray: "4 4" }, interactive: false }).addTo(map);
+    dongLayer = L.geoJSON(data.dong, { style: DONG_STYLE, interactive: false }).addTo(map);
     fitGu();
 
     // 도로 조각을 표시 항목별로 나눔
@@ -192,7 +222,7 @@ window.IceMap = (() => {
       const latlngs = f.geometry.coordinates.map(([x, y]) => [y, x]);
       const line = L.polyline(latlngs, { ...styleFor(key, p), renderer });
       line.props = p;
-      line.on("click", (e) => { setHighlight([line]); roadDetail(p, e.latlng); });
+      line.on("click", (e) => { setHighlight([line]); (p.c ? cityDetail : roadDetail)(p, e.latlng); });
       groups[key].addLayer(line);
       if (!p.n.endsWith("이면도로") && p.n !== "이름 없는 도로") {
         if (!named.has(p.n)) named.set(p.n, []);
@@ -207,14 +237,25 @@ window.IceMap = (() => {
       groups.registry.addLayer(line);
     }
 
+    // 구 제설 노선: 도로 아래에 넓고 옅은 띠로 깔아 단계 색이 보이게 함 (톤급이 클수록 굵게)
+    const SNOW_W = { "15톤": 9, "5톤": 7, "2.5톤": 6, "1톤": 5 };
+    for (const f of data.snow?.features || []) {
+      const latlngs = f.geometry.coordinates.map(([x, y]) => [y, x]);
+      const line = L.polyline(latlngs, { color: C.layers.snow.color, opacity: 0.35, weight: SNOW_W[f.properties.t] || 6, lineCap: "round", renderer });
+      line.on("click", (e) => { setHighlight([line]); snowDetail(f.properties, e.latlng); });
+      groups.snow.addLayer(line);
+    }
+    if (!data.snow) delete C.layers.snow;
+
     // 표시 항목 체크박스
-    const counts = { registry: `${data.summary.registry.count}곳` };
+    const sn = data.summary.snow;
+    const counts = { snow: sn ? `${sn.routes}개 노선` : "", registry: `${data.summary.registry.count}곳`, city: `${Math.round(data.summary.scope.cityKm + data.summary.scope.highwayKm)} km` };
     data.summary.grades.forEach((g) => (counts[`g${g.grade}`] = `${Math.round(g.km).toLocaleString()} km`));
     const box = document.getElementById("layerChecks");
     box.innerHTML = Object.entries(C.layers).map(([k, c]) =>
       `<label><input type="checkbox" data-layer="${k}" ${c.on ? "checked" : ""}><span class="swatch-line" style="background:${c.color};height:${Math.max(2, Math.min(5, c.weight))}px"></span>${esc(c.label)}<small>${counts[k]}</small></label>`).join("");
     box.querySelectorAll("input").forEach((i) => (i.onchange = () => setLayer(i.dataset.layer, i.checked)));
-    DRAW_ORDER.forEach((k) => C.layers[k].on && setLayer(k, true));
+    DRAW_ORDER.forEach((k) => C.layers[k]?.on && setLayer(k, true));
 
     // 도로명 검색
     const names = [...named.keys()].sort((a, b) => a.localeCompare(b, "ko"));
@@ -251,7 +292,7 @@ window.IceMap = (() => {
 
     // 주의 구간(4~5단계)이 긴 도로 목록: 같은 도로명으로 묶어 길이 합산
     const agg = new Map();
-    data.roads.features.filter((f) => f.properties.gr >= 4 && named.has(f.properties.n)).forEach((f) => {
+    data.roads.features.filter((f) => !f.properties.c && f.properties.gr >= 4 && named.has(f.properties.n)).forEach((f) => {
       const p = f.properties;
       const a = agg.get(p.n) || { name: p.n, dongs: new Set(), len: 0, g5: 0, coords: [] };
       a.len += p.L; if (p.gr === 5) a.g5 += p.L; if (p.d) a.dongs.add(p.d);
@@ -271,7 +312,7 @@ window.IceMap = (() => {
   function setFactor(bit) {
     factorBit = bit;
     document.getElementById("factorSelect").value = String(bit);
-    DRAW_ORDER.filter((k) => k !== "registry").forEach((k) => groups[k].eachLayer((l) => l.setStyle(styleFor(k, l.props))));
+    DRAW_ORDER.filter((k) => !["registry", "city", "snow"].includes(k)).forEach((k) => groups[k].eachLayer((l) => l.setStyle(styleFor(k, l.props))));
     legend();
   }
 
@@ -279,7 +320,7 @@ window.IceMap = (() => {
     if (!name) { map.fitBounds(dongLayer.getBounds()); clearHighlight(); return; }
     dongLayer.eachLayer((l) => {
       const on = l.feature.properties.dong === name;
-      l.setStyle(on ? { color: "#1f6fd1", weight: 3, opacity: 0.9, dashArray: null } : { color: "#193b4c", weight: 1.2, opacity: 0.5, dashArray: "4 4" });
+      l.setStyle(on ? { color: "#7cc8ff", weight: 3, opacity: 0.95, dashArray: null } : DONG_STYLE);
       if (on) map.fitBounds(l.getBounds(), { padding: [20, 20] });
     });
     document.getElementById("dongSelect").value = name;
@@ -287,7 +328,7 @@ window.IceMap = (() => {
 
   // 개요 화면의 요인 카드: 모든 단계를 켜고 해당 요인 구간만 진하게
   function showFactor(bit) {
-    Object.keys(C.layers).forEach((k) => {
+    Object.keys(C.layers).filter((k) => k !== "snow").forEach((k) => {
       document.querySelector(`#layerChecks input[data-layer="${k}"]`).checked = true;
       visible[k] = true;
     });
@@ -295,5 +336,5 @@ window.IceMap = (() => {
     setFactor(bit);
   }
 
-  return { init, fitGu, focusDong, showFactor, invalidate: () => map && map.invalidateSize() };
+  return { init, fitGu, focusDong, showFactor, setTheme: () => applyBase(), invalidate: () => map && map.invalidateSize() };
 })();

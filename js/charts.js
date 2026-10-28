@@ -2,9 +2,12 @@
 window.Charts = (() => {
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-  // 0~1 값을 연한 회색 → 얼음 파랑 → 남색으로
+  // 0~1 값을 밤하늘 남색 → 얼음 파랑 → 서리 흰색으로
+  const light = () => document.documentElement.dataset.theme === "light";
   function iceColor(v) {
-    const stops = [[0, [243, 246, 248]], [0.33, [156, 194, 232]], [0.66, [31, 111, 209]], [1, [25, 59, 76]]];
+    const stops = light()
+      ? [[0, [243, 246, 248]], [0.33, [156, 194, 232]], [0.66, [31, 111, 209]], [1, [25, 59, 76]]]
+      : [[0, [22, 36, 47]], [0.33, [40, 88, 126]], [0.66, [90, 170, 230]], [1, [220, 240, 255]]];
     v = Math.max(0, Math.min(1, v));
     for (let i = 1; i < stops.length; i++) {
       if (v <= stops[i][0]) {
@@ -12,7 +15,7 @@ window.Charts = (() => {
         return `rgb(${ca.map((x, k) => Math.round(x + (cb[k] - x) * t)).join(",")})`;
       }
     }
-    return "rgb(25,59,76)";
+    return light() ? "rgb(25,59,76)" : "rgb(220,240,255)";
   }
 
   function heatmap(el, months, rate) {
@@ -25,8 +28,8 @@ window.Charts = (() => {
       h += `<tr><th style="text-align:right;white-space:nowrap">${monthName[m]}</th>`;
       rate[i].forEach((v, hr) => {
         const pct = Math.round(v * 100);
-        const dark = v / max > 0.55;
-        h += `<td style="background:${iceColor(v / max)};color:${dark ? "#fff" : "#123"}" title="${monthName[m]} ${hr}시: ${pct}%">${pct || ""}</td>`;
+        const hi = v / max > 0.55;   // 진한(밤 테마는 밝은) 칸은 글자색을 반대로
+        h += `<td style="background:${iceColor(v / max)};color:${hi !== light() ? "#123" : "#fff"}" title="${monthName[m]} ${hr}시: ${pct}%">${pct || ""}</td>`;
       });
       h += "</tr>";
     });
@@ -48,7 +51,7 @@ window.Charts = (() => {
     for (let v = lo; v <= hi; v += step) {
       s += `<line class="chart-grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text class="chart-label" x="${L - 6}" y="${y(v) + 3}" text-anchor="end">${v}</text>`;
     }
-    if (zero && lo < 0 && hi > 0) s += `<line x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}" stroke="#d63b5b" stroke-dasharray="4 3"/><text class="chart-label" x="${W - R}" y="${y(0) - 4}" text-anchor="end" fill="#d63b5b">0℃</text>`;
+    if (zero && lo < 0 && hi > 0) s += `<line x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}" stroke="#ff5d73" stroke-dasharray="4 3"/><text class="chart-label" x="${W - R}" y="${y(0) - 4}" text-anchor="end" fill="#ff5d73">0℃</text>`;
     for (let i = 0; i < n; i += 3) s += `<text class="chart-label" x="${x(i)}" y="${H - 14}" text-anchor="middle">${xLabels ? xLabels[i] : i}</text>`;
     series.forEach((d) => {
       const pts = d.values.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
@@ -63,7 +66,7 @@ window.Charts = (() => {
     el.innerHTML = s + "</svg>";
   }
 
-  function bars(el, labels, values, { color = "#1f6fd1", unit = "", height = 240 } = {}) {
+  function bars(el, labels, values, { color = "#5aaae6", unit = "", height = 240 } = {}) {
     const W = 560, H = height, L = 34, R = 10, T = 16, B = 40;
     const max = Math.max(...values) || 1, n = values.length, bw = (W - L - R) / n;
     let s = `<svg viewBox="0 0 ${W} ${H}" role="img">`;
@@ -80,5 +83,5 @@ window.Charts = (() => {
     el.innerHTML = s + "</svg>";
   }
 
-  return { heatmap, line, bars, esc };
+  return { heatmap, line, bars, esc, light };
 })();

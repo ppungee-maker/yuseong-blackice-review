@@ -8,14 +8,17 @@ window.APP_CONFIG = {
     dong: "data/dong_boundary.geojson",
     gu: "data/gu_boundary.geojson"
   },
+  optionalFiles: { snow: "data/snow.geojson" },   // 없어도 지도는 뜸 (제설 노선: 내부 검토용)
   // 결빙 주의 단계(5단계) + 상습 결빙구간: key → 이름, 색, 굵기, 처음 켜짐 여부
   layers: {
-    g5:       { label: "5단계 매우 주의", color: "#b2182b", weight: 5, on: true },
-    g4:       { label: "4단계 주의", color: "#ef6548", weight: 4, on: true },
-    g3:       { label: "3단계 관심", color: "#f2a93b", weight: 3, on: true },
-    g2:       { label: "2단계 보통", color: "#8fb3cf", weight: 1.6, on: true },
-    g1:       { label: "1단계 일반", color: "#a9b3b8", weight: 1, on: true },
-    registry: { label: "행정안전부 상습 결빙구간", color: "#5b2a86", weight: 6, on: true }
+    g5:       { label: "5단계 매우 주의", color: "#ff2d55", weight: 5, on: true },
+    g4:       { label: "4단계 주의", color: "#ff7a45", weight: 4, on: true },
+    g3:       { label: "3단계 관심", color: "#f5b942", weight: 3, on: true },
+    g2:       { label: "2단계 보통", color: "#5f8fb8", weight: 1.6, on: true },
+    g1:       { label: "1단계 일반", color: "#6b7a86", weight: 1, on: true },
+    snow:     { label: "구 제설 노선 (참고)", color: "#3aa0ff", weight: 6, on: false },
+    city:     { label: "대전시·도로공사 관리 도로 (분석 제외)", color: "#8795a0", weight: 1.4, on: true },
+    registry: { label: "상습 결빙구간 (유성구 지정)", color: "#c792ff", weight: 6, on: false }
   },
   // 위험 요인: 비트(자료의 r 값) → 이름, 점수 설명, 지도 사유 문구
   factors: [
@@ -37,6 +40,7 @@ window.APP_CONFIG = {
   // 그늘 계산 방법(추정값임을 밝힘)
   shadeNote: "그늘은 현장에서 잰 값이 아니라 계산한 추정값입니다. 동지(12월 22일) 낮 동안 30분마다 해의 위치를 계산하고, 수치지도의 건물(층수×3 m)·옹벽·지형이 햇빛을 가리는지 따졌습니다. 나무·방음벽 등은 반영되지 않아 실제와 다를 수 있습니다.",
   gradeNames: { 1: "고속도로", 2: "간선도로(4차로 이상)", 3: "보조간선도로(2~3차로)", 4: "소로·이면도로" },
+  managerNames: { 1: "대전광역시", 2: "한국도로공사" },
   structNames: { 0: "일반 도로", 1: "교량·고가도로", 2: "터널", 3: "지하차도" },
   contact: ""   // 결빙 신고·문의처 확정 후 입력 (예: "유성구청 ○○과 042-000-0000")
 };
