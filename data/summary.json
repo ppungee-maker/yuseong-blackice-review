@@ -1,44 +1,44 @@
 {
- "updated": "2026. 10. 27.",
+ "updated": "2026. 11. 05.",
  "stage": "1차 분석(위험 요인 점수 합산)",
  "grades": [
   {
    "grade": 5,
-   "km": 10.0,
-   "share": 0.008
+   "km": 9.2,
+   "share": 0.007
   },
   {
    "grade": 4,
-   "km": 22.2,
-   "share": 0.018
+   "km": 14.7,
+   "share": 0.012
   },
   {
    "grade": 3,
-   "km": 148.8,
+   "km": 149.7,
    "share": 0.12
   },
   {
    "grade": 2,
-   "km": 411.8,
-   "share": 0.332
+   "km": 324.3,
+   "share": 0.261
   },
   {
    "grade": 1,
-   "km": 649.4,
-   "share": 0.523
+   "km": 744.3,
+   "share": 0.599
   }
  ],
  "factors": {
   "bridge": 7.0,
   "portal": 14.8,
-  "shade": 200.7,
+  "shade": 96.5,
   "water": 165.0,
   "slope": 160.0,
   "high": 129.2
  },
  "roads": {
   "km": 1242.2,
-  "pieces": 17251,
+  "pieces": 17011,
   "namedShare": 0.402
  },
  "bridge": {
@@ -69,7 +69,7 @@
    "roadKm": 70.1,
    "bridgeKm": 0.8,
    "g5Km": 0.7,
-   "g4Km": 0.2,
+   "g4Km": 0.1,
    "g3Km": 5.8,
    "bridgeCount": 11,
    "tunnelKm": 0.0,
@@ -78,10 +78,10 @@
   },
   {
    "dong": "구즉동",
-   "roadKm": 218.9,
+   "roadKm": 219.0,
    "bridgeKm": 0.6,
    "g5Km": 0.9,
-   "g4Km": 1.9,
+   "g4Km": 0.6,
    "g3Km": 12.5,
    "bridgeCount": 14,
    "tunnelKm": 0.0,
@@ -90,11 +90,11 @@
   },
   {
    "dong": "노은1동",
-   "roadKm": 62.2,
+   "roadKm": 62.1,
    "bridgeKm": 0.1,
    "g5Km": 0.5,
-   "g4Km": 2.3,
-   "g3Km": 11.0,
+   "g4Km": 1.7,
+   "g3Km": 11.1,
    "bridgeCount": 5,
    "tunnelKm": 0.6,
    "approachKm": 2.6,
@@ -105,8 +105,8 @@
    "roadKm": 77.9,
    "bridgeKm": 0.7,
    "g5Km": 0.7,
-   "g4Km": 2.3,
-   "g3Km": 7.7,
+   "g4Km": 1.5,
+   "g3Km": 8.0,
    "bridgeCount": 18,
    "tunnelKm": 0.5,
    "approachKm": 1.8,
@@ -117,7 +117,7 @@
    "roadKm": 40.7,
    "bridgeKm": 0.1,
    "g5Km": 0.2,
-   "g4Km": 2.5,
+   "g4Km": 1.6,
    "g3Km": 8.1,
    "bridgeCount": 3,
    "tunnelKm": 0.0,
@@ -128,8 +128,8 @@
    "dong": "상대동",
    "roadKm": 20.9,
    "bridgeKm": 0.4,
-   "g5Km": 1.0,
-   "g4Km": 0.5,
+   "g5Km": 0.6,
+   "g4Km": 0.8,
    "g3Km": 2.7,
    "bridgeCount": 4,
    "tunnelKm": 0.5,
@@ -140,7 +140,7 @@
    "dong": "신성동",
    "roadKm": 93.4,
    "bridgeKm": 0.7,
-   "g5Km": 0.7,
+   "g5Km": 0.6,
    "g4Km": 0.4,
    "g3Km": 9.1,
    "bridgeCount": 11,
@@ -150,11 +150,11 @@
   },
   {
    "dong": "온천1동",
-   "roadKm": 69.4,
+   "roadKm": 69.5,
    "bridgeKm": 0.8,
    "g5Km": 0.4,
-   "g4Km": 3.7,
-   "g3Km": 12.0,
+   "g4Km": 2.6,
+   "g3Km": 12.2,
    "bridgeCount": 10,
    "tunnelKm": 0.0,
    "approachKm": 1.2,
@@ -165,8 +165,8 @@
    "roadKm": 59.1,
    "bridgeKm": 0.5,
    "g5Km": 1.3,
-   "g4Km": 1.3,
-   "g3Km": 17.0,
+   "g4Km": 0.8,
+   "g3Km": 17.2,
    "bridgeCount": 10,
    "tunnelKm": 0.6,
    "approachKm": 2.3,
@@ -176,8 +176,8 @@
    "dong": "원신흥동",
    "roadKm": 25.4,
    "bridgeKm": 0.2,
-   "g5Km": 0.8,
-   "g4Km": 0.4,
+   "g5Km": 0.5,
+   "g4Km": 0.6,
    "g3Km": 6.9,
    "bridgeCount": 2,
    "tunnelKm": 0.6,
@@ -201,7 +201,7 @@
    "roadKm": 345.9,
    "bridgeKm": 1.3,
    "g5Km": 2.0,
-   "g4Km": 2.8,
+   "g4Km": 2.1,
    "g3Km": 42.8,
    "bridgeCount": 39,
    "tunnelKm": 0.0,
@@ -213,7 +213,7 @@
    "roadKm": 110.2,
    "bridgeKm": 0.6,
    "g5Km": 0.6,
-   "g4Km": 3.1,
+   "g4Km": 1.3,
    "g3Km": 5.7,
    "bridgeCount": 13,
    "tunnelKm": 0.0,
