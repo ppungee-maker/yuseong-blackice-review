@@ -63,6 +63,10 @@
   "highwayKm": 44.7,
   "allKm": 1417.5
  },
+ "snow": {
+  "routes": 37,
+  "km": 318.9
+ },
  "dongs": [
   {
    "dong": "관평동",
