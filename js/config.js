@@ -17,7 +17,7 @@ window.APP_CONFIG = {
     g2:       { label: "2단계 보통", color: "#5f8fb8", weight: 1.6, on: false },
     g1:       { label: "1단계 일반", color: "#6b7a86", weight: 1, on: false },
     snow:     { label: "구 제설 노선 (참고)", color: "#3aa0ff", weight: 6, on: true },
-    city:     { label: "대전시·도로공사 관리 도로 (분석 제외)", color: "#8795a0", weight: 1.4, on: false },
+    city:     { label: "대전시·도로공사 관리 도로 (분석 제외)", color: "#8795a0", weight: 1.4, on: true },
     registry: { label: "상습 결빙구간 (유성구 지정)", color: "#c792ff", weight: 6, on: false }
   },
   // 위험 요인: 비트(자료의 r 값) → 이름, 점수 설명, 지도 사유 문구
